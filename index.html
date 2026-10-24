@@ -1,0 +1,163 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Last Round Tavern Menu</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One+SC&family=Work+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: tavern chalk-and-brass menu board; sticky filter rail, sections in a single readable column, DIY pie builder as a ticket */
+:root{
+  --bg:#f3f1ea; --panel:#ffffff; --fg:#1f2a24; --muted:#5d6a62; --line:#d9d6cb;
+  --accent:#1e5a3f; --brass:#a8772b; --veg:#3d7d2f; --vegan:#0f7a6a; --warn:#a2452c;
+  --display:"Bowlby One SC", Impact, "Arial Black", sans-serif;
+  --body:"Work Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141b17; --panel:#1c2620; --fg:#e8ebe4; --muted:#9aa89f; --line:#2f3c34;
+  --accent:#6fbf94; --brass:#d6a65a; --veg:#8fcf7a; --vegan:#5fd1bd; --warn:#e48a6c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141b17; --panel:#1c2620; --fg:#e8ebe4; --muted:#9aa89f; --line:#2f3c34;
+  --accent:#6fbf94; --brass:#d6a65a; --veg:#8fcf7a; --vegan:#5fd1bd; --warn:#e48a6c; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--body);padding-inline:16px;padding-block:0 48px}
+.wrap{max-width:760px;margin:0 auto}
+header{padding-block:28px 12px}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(28px,6vw,44px);line-height:1;margin:0;color:var(--accent);text-wrap:balance}
+.sub{color:var(--muted);margin:6px 0 0;font-size:14px}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{border:1.5px solid var(--line);background:var(--panel);color:var(--fg);border-radius:999px;padding:6px 12px;font:600 13px var(--body);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.chip:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+#q{flex:1 1 160px;min-width:0;border:1.5px solid var(--line);background:var(--panel);color:var(--fg);border-radius:8px;padding:7px 10px;font:14px var(--body)}
+.note{margin:14px 0 0;padding:10px 12px;border-left:3px solid var(--brass);background:var(--panel);font-size:13px;color:var(--muted)}
+section{margin-top:26px}
+h2{font-family:var(--display);font-weight:400;font-size:20px;letter-spacing:.02em;margin:0 0 8px;color:var(--brass)}
+.item{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.item>div{min-width:0}
+.name{font-weight:600}
+.price{font-variant-numeric:tabular-nums;font-weight:600;text-align:right;white-space:nowrap}
+.desc{grid-column:1/-1;color:var(--muted);font-size:13.5px}
+.tags{display:inline-flex;gap:4px;margin-left:6px;vertical-align:2px}
+.tag{font:600 10.5px var(--body);letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:4px;border:1px solid currentColor}
+.t-veg{color:var(--veg)} .t-vegan{color:var(--vegan)}
+.mod{grid-column:1/-1;font-size:12.5px;color:var(--vegan)}
+.empty{color:var(--muted);padding:20px 0}
+.builder{margin-top:30px;background:var(--panel);border:1.5px solid var(--line);border-radius:10px;padding:16px}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.top{display:flex;align-items:center;gap:6px;border:1.5px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13.5px;cursor:pointer;background:var(--bg)}
+.top input{accent-color:var(--accent)}
+.top.meat{opacity:.85}
+.total{display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--fg);margin-top:12px;padding-top:10px;font-weight:600}
+.total b{font-family:var(--display);font-weight:400;font-size:26px;color:var(--accent);font-variant-numeric:tabular-nums}
+#veganStatus{font-size:13px;margin-top:6px}
+.ok{color:var(--vegan)} .no{color:var(--warn)}
+.foot{margin-top:28px;font-size:13px;color:var(--muted)}
+.foot span{user-select:all;color:var(--fg);font-weight:600}
+@media (prefers-reduced-motion:no-preference){.item{transition:opacity .15s}}
+</style>
+<style>[hidden]{display:none!important}body{margin:0}</style></head><body>
+
+<div class="wrap">
+<header>
+  <h1>The Last Round Tavern</h1>
+  <p class="sub">Tavern-style thin crust, square cut · 354 E Santa Clara St, San Jose</p>
+</header>
+
+<div class="bar" role="toolbar" aria-label="Filter menu">
+  <button class="chip" data-f="all" aria-pressed="true">Everything</button>
+  <button class="chip" data-f="veg" aria-pressed="false">Vegetarian</button>
+  <button class="chip" data-f="vegan" aria-pressed="false">Vegan-able</button>
+  <input id="q" type="search" placeholder="Search menu" aria-label="Search menu">
+</div>
+
+<p class="note" id="veganNote" hidden>Nothing on the menu is labeled vegan. "Vegan-able" means it should work with the change shown. All cheese is whole-milk mozzarella; call to confirm the dough and sauce have no dairy or honey.</p>
+
+<div id="menu"></div>
+
+<div class="builder" id="build">
+  <h2>Build a D.I.Y. Pie</h2>
+  <div class="row" role="radiogroup" aria-label="Size">
+    <label class="top"><input type="radio" name="size" id="s-m" value="23" checked> Medium 14" · $23</label>
+    <label class="top"><input type="radio" name="size" id="s-l" value="28"> Large 18" · $28</label>
+    <label class="top"><input type="checkbox" id="nocheese"> No cheese</label>
+  </div>
+  <div class="row" id="toppings"></div>
+  <div class="total"><span>Your pie</span><b id="total">$23</b></div>
+  <div id="veganStatus"></div>
+</div>
+
+<p class="foot">Prices from lastroundtavern.com/menu (Oct 2026). Ask about vegan prep: <span>(408) 286-9710</span></p>
+</div>
+
+<script>
+const M=[
+ ["Bar Bites",[
+  ["Caprese Plate",15,"Fresh mozzarella, tomatoes, basil, EVOO, balsamic","veg"],
+  ["Buffalo Wings",14,"Baked buffalo or honey BBQ, ranch or blue cheese",""],
+  ["Tear 'N Share",20,"Baked sourdough, mozzarella, chopped garlic, parsley","veg"],
+  ["Meatball a la Carte",6,"House-made all-beef meatball, marinara, basil, Parmesan",""],
+  ["Garlic Bread",9,"Sourdough roll, garlic butter, parsley","veg"]]],
+ ["Salads",[
+  ["Caesar Salad",14,"Romaine, croutons, Parmesan (dressing usually has anchovy)",""],
+  ["Cobb Salad",16,"Romaine, tomato, bacon, chicken, mozzarella, egg",""],
+  ["The Bronx Salad",15,"Arugula, mozzarella, sun-dried & roma tomatoes, carrots, croutons, balsamic","vegan","Hold the mozzarella; ask if croutons are dairy-free"]]],
+ ["Signature Pies · M $32 / L $38",[
+  ["Meatball",32,"All-beef meatballs, mozzarella, basil",""],
+  ["Brisket",32,"12-hr braised brisket, garlic sauce, red onions, arugula, BBQ",""],
+  ["S.O.B.",32,"Chorizo, garlic sauce, lettuce, tomato, sour cream, orange zilla sauce, cotija",""],
+  ["Cubano",32,"Pulled pork, ham, salami, pepperoncini, tomato, spinach, Cubano sauce",""],
+  ["Wrigleyville",32,"Hot giardiniera, sausage, chopped garlic",""],
+  ["Arthur Ave.",32,"Pepperoni, sausage, salami, linguica, red onions",""],
+  ["Pride of Philly",32,"Pulled pork, garlic sauce, sharp provolone, spinach",""],
+  ["The Hog & Bird",32,"Pesto, bacon, chicken, tomato, red onions",""],
+  ["Supreme",32,"Pepperoni, sausage, mushrooms, olives, bell peppers, red onions",""],
+  ["Bacon on White",32,"Garlic sauce, bacon, Pecorino Romano, basil",""]]],
+ ["Garden Pies · M $27 / L $33",[
+  ["Margherita",27,"Fresh mozzarella, basil, EVOO, Pecorino Romano","veg"],
+  ["Veggie Supreme",27,"Mushrooms, olives, bell peppers, red onions, tomatoes","vegan","Order with no cheese"],
+  ["Spicy Pono",27,"Pickled jalapeños, pineapple, hot honey","veg"],
+  ["The Three Piece",27,"House-made pesto, mushrooms, ricotta","veg"]]],
+ ["From the Oven",[
+  ["Stromboli",22,"Ham, pepperoni, salami, mushrooms, tomato sauce, mozzarella, mustard",""],
+  ["Calzone",22,"Pepperoni, salami, mushrooms, tomato sauce, ricotta, mozzarella",""]]],
+ ["Dips & Dressings",[
+  ["Marinara",2.5,"","vegan","Likely vegan as is"],
+  ["Ranch",2,"","veg"],["Creamy Garlic",2,"","veg"],["Creamy Pesto",2,"","veg"],
+  ["Hot Honey",2.5,"","veg"],["Honey BBQ",2.5,"","veg"],["Buffalo",2,"","veg"],
+  ["Blue Cheese",2,"","veg"],["Cubano",2.5,"",""]]]
+];
+const TOP=[
+ ["Meatball",6,0],["Brisket",6,0],["Braised Pork",6,0],["Pepperoni",5,0],["Sausage",5,0],["Ham",5,0],["Salami",5,0],["Chorizo",5,0],["Linguica",5,0],["Bacon",5,0],
+ ["Hot Giardiniera",4,1],["Ricotta",4,2],["Fresh Mozzarella",4,2],
+ ["Bell Peppers",3,1],["Mushrooms",3,1],["Olives",3,1],["Onions",3,1],["Tomatoes",3,1],["Spinach",3,1],["Arugula",3,1],["Basil",3,1],["Garlic",3,1],["Jalapeños",3,1],["Pineapple",3,1]
+]; // 0 meat, 1 plant, 2 dairy
+let filter="all",q="";
+const $=s=>document.querySelector(s), fmt=n=>"$"+(n%1?n.toFixed(2):n);
+function ok(t){return filter==="all"||(filter==="veg"&&t)||(filter==="vegan"&&t==="vegan")}
+function render(){
+  let html="",n=0;
+  for(const [sec,items] of M){
+    const rows=items.filter(([nm,,d,t])=>ok(t)&&(nm+" "+d).toLowerCase().includes(q));
+    if(!rows.length)continue;n+=rows.length;
+    html+=`<section><h2>${sec}</h2>`+rows.map(([nm,p,d,t,mod])=>`<div class="item"><div><span class="name">${nm}</span>${t?`<span class="tags">${t==="vegan"?'<span class="tag t-vegan">Vegan-able</span>':'<span class="tag t-veg">Veg</span>'}</span>`:""}</div><div class="price">${fmt(p)}</div>${d?`<div class="desc">${d}</div>`:""}${mod&&filter!=="veg"?`<div class="mod">→ ${mod}</div>`:""}</div>`).join("")+`</section>`;
+  }
+  if(filter==="vegan"||filter==="all"&&!q){}
+  $("#menu").innerHTML=html||`<p class="empty">Nothing matches "${q}".</p>`;
+  $("#veganNote").hidden=filter!=="vegan";
+}
+document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{
+  filter=b.dataset.f;document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",c===b));render();
+  if(filter==="vegan"){$("#nocheese").checked=true;calc()}
+});
+$("#q").oninput=e=>{q=e.target.value.toLowerCase().trim();render()};
+$("#toppings").innerHTML=TOP.map(([n,p,k],i)=>`<label class="top${k===0?" meat":""}"><input type="checkbox" id="t${i}" data-i="${i}"> ${n} <span style="color:var(--muted)">+$${p}</span></label>`).join("");
+function calc(){
+  let t=+document.querySelector('input[name=size]:checked').value,meat=0,dairy=0;
+  document.querySelectorAll("#toppings input:checked").forEach(c=>{const [,p,k]=TOP[c.dataset.i];t+=p;if(k===0)meat++;if(k===2)dairy++});
+  $("#total").textContent="$"+t;
+  const nc=$("#nocheese").checked,s=$("#veganStatus");
+  if(meat){s.className="no";s.textContent="Has meat."}
+  else if(dairy||!nc){s.className="no";s.textContent=nc?"Ricotta or mozzarella topping adds dairy.":"Vegetarian. Check \"No cheese\" to make it vegan-able."}
+  else{s.className="ok";s.textContent="Vegan-able: tomato sauce, no cheese, all-plant toppings. Confirm the dough with the staff."}
+}
+document.getElementById("build").addEventListener("change",calc);
+render();calc();
+</script>
+</body></html>
